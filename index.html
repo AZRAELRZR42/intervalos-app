@@ -3,53 +3,176 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0a192f">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Cronómetro de Intervalos</title>
 <style>
-  :root { --bg:#0f172a; --bg2:#1e1b4b; --card:rgba(30,41,59,0.84); --work:#10b981; --rest:#f59e0b; --prep:#38bdf8; --text:#f8fafc; --muted:#94a3b8; --border:rgba(148,163,184,0.24); --bg-img:none; }
+  :root {
+    --bg: #081221;
+    --bg2: #172a46;
+    --card-rgb: 10, 25, 47;
+    --alpha: 0.45;
+    --blur: 8px;
+    --work: #fbbf24;
+    --rest: #2dd4bf;
+    --prep: #38bdf8;
+    --text: #fef3c7;
+    --muted: #cbd5e1;
+    --border: rgba(251, 191, 36, 0.35);
+    --bg-img: none;
+  }
   * { box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; margin:0; padding:0; }
-  body { background:var(--bg-img), radial-gradient(circle at top, var(--bg2), var(--bg) 75%); background-size:cover; background-position:center; background-attachment:fixed; color:var(--text); display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:14px; transition:background 0.4s; }
-  .barra-temas { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom:12px; background:var(--card); backdrop-filter:blur(10px); padding:8px 14px; border-radius:999px; border:1px solid var(--border); }
-  .tema-btn { width:24px; height:24px; border-radius:50%; border:2px solid #fff; cursor:pointer; }
-  .foto-btn { background:rgba(255,255,255,0.12); color:var(--text); border:1px solid var(--border); padding:4px 10px; border-radius:999px; font-size:0.78rem; cursor:pointer; }
-  .panel { background:var(--card); backdrop-filter:blur(14px); width:100%; max-width:420px; border-radius:26px; padding:20px; text-align:center; border:1px solid var(--border); box-shadow:0 18px 40px rgba(0,0,0,0.45); }
-  .anillo-wrap { position:relative; width:220px; height:220px; margin:4px auto 14px; display:flex; align-items:center; justify-content:center; }
-  svg.anillo { position:absolute; top:0; left:0; width:100%; height:100%; transform:rotate(-90deg); }
-  circle.fondo { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:10; }
+  body {
+    background: var(--bg-img), radial-gradient(circle at top, var(--bg2), var(--bg) 78%);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 12px 14px;
+    transition: background 0.4s;
+  }
+  .barra-sup {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .btn-menu {
+    background: rgba(var(--card-rgb), 0.55);
+    backdrop-filter: blur(8px);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+  }
+  .menu-estilo {
+    display: none;
+    width: 100%;
+    max-width: 420px;
+    background: rgba(var(--card-rgb), 0.78);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  }
+  .menu-estilo.abierto { display: block; }
+  .temas-grid {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .tema-chip {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .control-transp {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+  .control-transp input[type="range"] {
+    flex: 1;
+    accent-color: var(--work);
+  }
+  .acciones-fondo {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .foto-btn {
+    background: rgba(255,255,255,0.12);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .panel {
+    background: rgba(var(--card-rgb), var(--alpha));
+    backdrop-filter: blur(var(--blur));
+    width: 100%;
+    max-width: 420px;
+    border-radius: 26px;
+    padding: 18px 20px;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    transition: background 0.2s, backdrop-filter 0.2s;
+  }
+  .anillo-wrap { position:relative; width:215px; height:215px; margin:2px auto 12px; display:flex; align-items:center; justify-content:center; }
+  svg.anillo { position:absolute; top:0; left:0; width:100%; height:100%; transform:rotate(-90deg); filter:drop-shadow(0 0 8px rgba(0,0,0,0.5)); }
+  circle.fondo { fill:none; stroke:rgba(255,255,255,0.12); stroke-width:10; }
   circle.progreso { fill:none; stroke:var(--prep); stroke-width:10; stroke-linecap:round; stroke-dasharray:603; stroke-dashoffset:0; transition:stroke-dashoffset 0.35s linear, stroke 0.3s; }
-  .centro-reloj { z-index:2; display:flex; flex-direction:column; align-items:center; }
-  .estado { font-size:0.92rem; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; color:var(--prep); }
+  .centro-reloj { z-index:2; display:flex; flex-direction:column; align-items:center; text-shadow:0 2px 8px rgba(0,0,0,0.75); }
+  .estado { font-size:0.92rem; font-weight:800; letter-spacing:1.8px; text-transform:uppercase; color:var(--prep); }
   .reloj { font-size:2.9rem; font-weight:800; font-variant-numeric:tabular-nums; margin:2px 0; transition:transform 0.15s; }
   .latido { transform:scale(1.09); }
-  .ronda { font-size:0.88rem; color:var(--muted); font-weight:600; }
-  .presets { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
-  .presets button { background:rgba(255,255,255,0.09); color:var(--text); border:1px solid var(--border); padding:7px 11px; border-radius:12px; font-size:0.82rem; font-weight:600; cursor:pointer; }
-  .filas { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
-  .fila { display:flex; align-items:center; justify-content:space-between; background:rgba(15,23,42,0.55); padding:9px 14px; border-radius:14px; border:1px solid var(--border); }
-  .fila span.titulo { font-size:0.9rem; font-weight:600; }
+  .ronda { font-size:0.88rem; color:var(--muted); font-weight:700; }
+  .presets { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+  .presets button { background:rgba(0,0,0,0.28); color:var(--text); border:1px solid var(--border); padding:7px 11px; border-radius:12px; font-size:0.82rem; font-weight:600; cursor:pointer; }
+  .filas { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .fila { display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.28); padding:8px 14px; border-radius:14px; border:1px solid var(--border); }
+  .fila span.titulo { font-size:0.9rem; font-weight:600; text-shadow:0 1px 4px rgba(0,0,0,0.6); }
   .tiempo-par { display:flex; align-items:center; gap:5px; }
-  .tiempo-par input { width:54px; background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:9px; text-align:center; font-size:1.05rem; font-weight:700; }
+  .tiempo-par input { width:54px; background:rgba(0,0,0,0.35); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:9px; text-align:center; font-size:1.05rem; font-weight:700; }
   .tiempo-par b { color:var(--muted); font-size:1.1rem; }
   .controles { display:flex; gap:10px; }
-  .btn { flex:1; border:none; padding:14px; border-radius:15px; font-size:1rem; font-weight:800; cursor:pointer; color:#0f172a; }
+  .btn { flex:1; border:none; padding:14px; border-radius:15px; font-size:1rem; font-weight:800; cursor:pointer; color:#090d16; box-shadow:0 6px 16px rgba(0,0,0,0.35); }
   .btn-start { background:var(--work); }
   .btn-pause { background:var(--rest); }
-  .btn-stop { background:#ef4444; color:#fff; }
-  .resumen-hoy { margin-top:12px; font-size:0.8rem; color:var(--muted); }
+  .btn-stop { background:#dc2626; color:#fff; }
+  .resumen-hoy { margin-top:10px; font-size:0.8rem; color:var(--muted); font-weight:600; text-shadow:0 1px 4px rgba(0,0,0,0.8); }
 </style>
 </head>
 <body>
-  <div class="barra-temas">
-    <button class="tema-btn" style="background:#10b981" onclick="aplicarTema('neon')"></button>
-    <button class="tema-btn" style="background:#f97316" onclick="aplicarTema('lava')"></button>
-    <button class="tema-btn" style="background:#06b6d4" onclick="aplicarTema('oceano')"></button>
-    <button class="tema-btn" style="background:#e2e8f0" onclick="aplicarTema('claro')"></button>
-    <label class="foto-btn">🖼️ Fondo <input type="file" accept="image/*" hidden onchange="cargarFondo(event)"></label>
-    <button class="foto-btn" onclick="quitarFondo()">✕</button>
+  <div class="barra-sup">
+    <button class="btn-menu" onclick="toggleMenuEstilo()">✨ Estilo Místico</button>
   </div>
+
+  <div id="menuEstilo" class="menu-estilo">
+    <div class="temas-grid">
+      <button class="tema-chip" onclick="aplicarTema('egipto')">🏺 Egipto</button>
+      <button class="tema-chip" onclick="aplicarTema('maya')">🌿 Maya</button>
+      <button class="tema-chip" onclick="aplicarTema('vikingo')">⚡ Vikingo</button>
+      <button class="tema-chip" onclick="aplicarTema('samurai')">⛩️ Samurái</button>
+      <button class="tema-chip" onclick="aplicarTema('grecia')">🏛️ Grecia</button>
+    </div>
+    <div class="control-transp">
+      <span>👁️ Opacidad</span>
+      <input id="rangoAlpha" type="range" min="5" max="90" value="45" oninput="ajustarOpacidad(this.value)">
+      <span id="txtAlpha">45%</span>
+    </div>
+    <div class="acciones-fondo">
+      <label class="foto-btn">🖼️ Elegir Fondo <input type="file" accept="image/*" hidden onchange="cargarFondo(event)"></label>
+      <button class="foto-btn" onclick="quitarFondo()">✕ Quitar Fondo</button>
+    </div>
+  </div>
+
   <div class="panel">
     <div class="anillo-wrap">
       <svg class="anillo" viewBox="0 0 220 220">
@@ -80,16 +203,35 @@
   </div>
 <script>
 const TEMAS = {
-  neon:   { bg:'#0f172a', bg2:'#1e1b4b', card:'rgba(30,41,59,0.84)', work:'#10b981', rest:'#f59e0b', prep:'#38bdf8', text:'#f8fafc', muted:'#94a3b8' },
-  lava:   { bg:'#180909', bg2:'#450a0a', card:'rgba(45,15,15,0.84)', work:'#f97316', rest:'#eab308', prep:'#fb7185', text:'#fff7ed', muted:'#fdba74' },
-  oceano: { bg:'#04151f', bg2:'#0c4a6e', card:'rgba(12,50,75,0.84)', work:'#06b6d4', rest:'#a78bfa', prep:'#34d399', text:'#f0f9ff', muted:'#7dd3fc' },
-  claro:  { bg:'#e2e8f0', bg2:'#cbd5e1', card:'rgba(255,255,255,0.88)', work:'#059669', rest:'#d97706', prep:'#0284c7', text:'#0f172a', muted:'#475569' }
+  egipto:  { bg:'#081221', bg2:'#1e3a8a', 'card-rgb':'10, 25, 47', work:'#fbbf24', rest:'#2dd4bf', prep:'#38bdf8', text:'#fef3c7', muted:'#fde68a', border:'rgba(251, 191, 36, 0.42)' },
+  maya:    { bg:'#05140e', bg2:'#064e3b', 'card-rgb':'6, 28, 20',  work:'#10b981', rest:'#f59e0b', prep:'#34d399', text:'#ecfdf5', muted:'#a7f3d0', border:'rgba(16, 185, 129, 0.42)' },
+  vikingo: { bg:'#070d19', bg2:'#1e293b', 'card-rgb':'12, 20, 38', work:'#38bdf8', rest:'#f97316', prep:'#94a3b8', text:'#f0f9ff', muted:'#bae6fd', border:'rgba(56, 189, 248, 0.42)' },
+  samurai: { bg:'#090507', bg2:'#450a0a', 'card-rgb':'24, 8, 12',  work:'#ef4444', rest:'#eab308', prep:'#f472b6', text:'#fff1f2', muted:'#fecdd3', border:'rgba(239, 68, 68, 0.45)' },
+  grecia:  { bg:'#110921', bg2:'#3b0764', 'card-rgb':'22, 12, 42', work:'#c084fc', rest:'#facc15', prep:'#22d3ee', text:'#faf5ff', muted:'#e9d5ff', border:'rgba(192, 132, 252, 0.42)' }
 };
-function aplicarTema(n) {
-  const t = TEMAS[n] || TEMAS.neon, r = document.documentElement.style;
-  Object.keys(t).forEach(k => r.setProperty('--' + k, t[k]));
-  localStorage.setItem('hiit_tema', n); updateUI();
+
+function toggleMenuEstilo() {
+  document.getElementById('menuEstilo').classList.toggle('abierto');
 }
+
+function ajustarOpacidad(val) {
+  const num = Math.max(5, Math.min(90, parseInt(val) || 45));
+  const alpha = (num / 100).toFixed(2);
+  const blur = Math.round((num / 90) * 14) + 'px';
+  document.documentElement.style.setProperty('--alpha', alpha);
+  document.documentElement.style.setProperty('--blur', blur);
+  document.getElementById('txtAlpha').textContent = num + '%';
+  document.getElementById('rangoAlpha').value = num;
+  localStorage.setItem('hiit_alpha', num);
+}
+
+function aplicarTema(n) {
+  const t = TEMAS[n] || TEMAS.egipto, r = document.documentElement.style;
+  Object.keys(t).forEach(k => r.setProperty('--' + k, t[k]));
+  localStorage.setItem('hiit_tema', n);
+  updateUI();
+}
+
 function cargarFondo(ev) {
   const file = ev.target.files && ev.target.files.item(0);
   if (!file) return;
@@ -101,7 +243,11 @@ function cargarFondo(ev) {
   };
   reader.readAsDataURL(file);
 }
-function quitarFondo() { document.documentElement.style.setProperty('--bg-img', 'none'); localStorage.removeItem('hiit_fondo'); }
+
+function quitarFondo() {
+  document.documentElement.style.setProperty('--bg-img', 'none');
+  localStorage.removeItem('hiit_fondo');
+}
 
 let timer = null, phase = 'idle', rem = 600, totalPhase = 600, round = 0, wakeLock = null;
 const PERIMETRO = 603, ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -200,7 +346,8 @@ function resetTimer() {
   keepAwake(false); updateUI();
 }
 (function init() {
-  aplicarTema(localStorage.getItem('hiit_tema') || 'neon');
+  aplicarTema(localStorage.getItem('hiit_tema') || 'egipto');
+  ajustarOpacidad(localStorage.getItem('hiit_alpha') || 45);
   const f = localStorage.getItem('hiit_fondo'); if (f) document.documentElement.style.setProperty('--bg-img', f);
   mostrarProgreso();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
