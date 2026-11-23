@@ -2,7 +2,7 @@
   "id": "/intervalos-app/",
   "name": "Cron\u00f3metro de Intervalos",
   "short_name": "Intervalos",
-  "start_url": "/intervalos-app/index.html",
+  "start_url": "/intervalos-app/",
   "scope": "/intervalos-app/",
   "display": "standalone",
   "orientation": "portrait",
