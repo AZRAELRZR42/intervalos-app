@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest.json">
+<title>Cronómetro HIIT & Cuerda</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --work:#10b981; --rest:#f59e0b; --prep:#3b82f6; --text:#f8fafc; }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:18px; }
+  h1 { font-size:1.3rem; margin-bottom:14px; letter-spacing:0.5px; }
+  .panel { background:var(--card); width:100%; max-width:420px; border-radius:20px; padding:22px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,.4); }
+  .estado { font-size:1.2rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; color:var(--prep); }
+  .reloj { font-size:4.6rem; font-weight:800; font-variant-numeric:tabular-nums; margin:8px 0; }
+  .ronda { font-size:1rem; color:#94a3b8; margin-bottom:16px; }
+  .presets { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
+  .presets button { background:#334155; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:0.85rem; cursor:pointer; }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+  .campo label { display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:4px; }
+  .campo input { width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:10px; border-radius:10px; text-align:center; font-size:1.05rem; font-weight:600; }
+  .controles { display:flex; gap:10px; }
+  .btn { flex:1; border:none; padding:14px; border-radius:14px; font-size:1rem; font-weight:700; cursor:pointer; color:#0f172a; }
+  .btn-start { background:var(--work); }
+  .btn-pause { background:var(--rest); }
+  .btn-stop { background:#ef4444; color:#fff; }
+</style>
+</head>
+<body>
+  <h1>⏱️ Cronómetro de Intervalos</h1>
+  <div class="panel">
+    <div id="estado" class="estado">Listo</div>
+    <div id="reloj" class="reloj">10:00</div>
+    <div id="ronda" class="ronda">Ronda 0 / 4</div>
+
+    <div class="presets">
+      <button onclick="setPreset(600,120,4)">🪢 Cuerda 10m / 2m</button>
+      <button onclick="setPreset(45,15,8)">🔥 HIIT 45s / 15s</button>
+      <button onclick="setPreset(20,10,8)">⚡ Tabata 20s / 10s</button>
+    </div>
+
+    <div class="grid">
+      <div class="campo"><label>Ejercicio (seg)</label><input id="inWork" type="number" value="600" min="5"></div>
+      <div class="campo"><label>Descanso (seg)</label><input id="inRest" type="number" value="120" min="0"></div>
+      <div class="campo"><label>Rondas</label><input id="inRounds" type="number" value="4" min="1" max="50"></div>
+    </div>
+
+    <div class="controles">
+      <button id="btnMain" class="btn btn-start" onclick="toggleTimer()">▶ Iniciar</button>
+      <button class="btn btn-stop" onclick="resetTimer()">⏹ Reiniciar</button>
+    </div>
+  </div>
+
+<script>
+let timer = null, phase = 'idle', rem = 600, round = 0, wakeLock = null;
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+function tone(freqs, dur=0.18) {
+  if (ctx.state === 'suspended') ctx.resume();
+  freqs.forEach((f, i) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.35, ctx.currentTime + i * (dur + 0.05));
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * (dur + 0.05) + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime + i * (dur + 0.05));
+    o.stop(ctx.currentTime + i * (dur + 0.05) + dur);
+  });
+}
+
+function speak(txt) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang = 'es-MX'; u.rate = 1.1;
+  speechSynthesis.speak(u);
+}
+
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) {}
+}
+
+function fmt(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0');
+  const sec = String(s % 60).padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function updateUI() {
+  const est = document.getElementById('estado');
+  const totR = parseInt(document.getElementById('inRounds').value) || 1;
+  document.getElementById('reloj').textContent = fmt(rem);
+  document.getElementById('ronda').textContent = `Ronda ${round} / ${totR}`;
+  est.textContent = phase === 'prep' ? 'Prepárate' : phase === 'work' ? '¡Entrenando!' : phase === 'rest' ? 'Descanso' : 'Listo';
+  est.style.color = phase === 'work' ? 'var(--work)' : phase === 'rest' ? 'var(--rest)' : 'var(--prep)';
+}
+
+function setPreset(w, r, rnd) {
+  resetTimer();
+  document.getElementById('inWork').value = w;
+  document.getElementById('inRest').value = r;
+  document.getElementById('inRounds').value = rnd;
+  rem = w; updateUI();
+}
+
+function toggleTimer() {
+  const btn = document.getElementById('btnMain');
+  if (timer) {
+    clearInterval(timer); timer = null;
+    btn.textContent = '▶ Reanudar'; btn.className = 'btn btn-start';
+    keepAwake(false); return;
+  }
+  if (phase === 'idle') {
+    phase = 'prep'; rem = 5; round = 1;
+    speak('Prepárate');
+  }
+  btn.textContent = '⏸ Pausar'; btn.className = 'btn btn-pause';
+  keepAwake(true); updateUI();
+
+  timer = setInterval(() => {
+    rem--;
+    if (rem <= 3 && rem >= 1) speak(String(rem));
+    if (rem <= 0) {
+      const workS = parseInt(document.getElementById('inWork').value) || 60;
+      const restS = parseInt(document.getElementById('inRest').value) || 0;
+      const totR = parseInt(document.getElementById('inRounds').value) || 1;
+
+      if (phase === 'prep' || phase === 'rest') {
+        phase = 'work'; rem = workS;
+        tone([880, 1320], 0.2); speak(`Empieza ronda ${round}`);
+      } else if (phase === 'work') {
+        if (round < totR && restS > 0) {
+          phase = 'rest'; rem = restS;
+          tone([660, 440], 0.22); speak('Tiempo terminado. Descanso');
+        } else if (round < totR) {
+          round++; rem = workS;
+          tone([880, 1320], 0.2); speak(`Ronda ${round}`);
+        } else {
+          tone([880, 1108, 1320], 0.2); speak('Entrenamiento terminado. Excelente trabajo');
+          resetTimer(); return;
+        }
+      }
+      if (phase === 'rest') round++;
+    }
+    updateUI();
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(timer); timer = null; phase = 'idle'; round = 0;
+  rem = parseInt(document.getElementById('inWork').value) || 600;
+  const btn = document.getElementById('btnMain');
+  btn.textContent = '▶ Iniciar'; btn.className = 'btn btn-start';
+  keepAwake(false); updateUI();
+}
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
