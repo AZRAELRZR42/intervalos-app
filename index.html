@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-512.png">
 <title>Cronómetro HIIT & Cuerda</title>
 <style>
   :root { --bg:#0f172a; --card:#1e293b; --work:#10b981; --rest:#f59e0b; --prep:#3b82f6; --text:#f8fafc; }
@@ -13,13 +14,16 @@
   h1 { font-size:1.3rem; margin-bottom:14px; letter-spacing:0.5px; }
   .panel { background:var(--card); width:100%; max-width:420px; border-radius:20px; padding:22px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,.4); }
   .estado { font-size:1.2rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; color:var(--prep); }
-  .reloj { font-size:4.6rem; font-weight:800; font-variant-numeric:tabular-nums; margin:8px 0; }
+  .reloj { font-size:4.2rem; font-weight:800; font-variant-numeric:tabular-nums; margin:8px 0; }
   .ronda { font-size:1rem; color:#94a3b8; margin-bottom:16px; }
   .presets { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
   .presets button { background:#334155; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:0.85rem; cursor:pointer; }
-  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
-  .campo label { display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:4px; }
-  .campo input { width:100%; background:#0f172a; border:1px solid #334155; color:#fff; padding:10px; border-radius:10px; text-align:center; font-size:1.05rem; font-weight:600; }
+  .filas { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+  .fila { display:flex; align-items:center; justify-content:space-between; background:#0f172a; padding:10px 14px; border-radius:12px; border:1px solid #334155; }
+  .fila span.titulo { font-size:0.9rem; color:#cbd5e1; font-weight:600; }
+  .tiempo-par { display:flex; align-items:center; gap:6px; }
+  .tiempo-par input { width:56px; background:#1e293b; border:1px solid #475569; color:#fff; padding:6px; border-radius:8px; text-align:center; font-size:1.05rem; font-weight:700; }
+  .tiempo-par b { color:#94a3b8; font-size:1.1rem; }
   .controles { display:flex; gap:10px; }
   .btn { flex:1; border:none; padding:14px; border-radius:14px; font-size:1rem; font-weight:700; cursor:pointer; color:#0f172a; }
   .btn-start { background:var(--work); }
@@ -31,19 +35,36 @@
   <h1>⏱️ Cronómetro de Intervalos</h1>
   <div class="panel">
     <div id="estado" class="estado">Listo</div>
-    <div id="reloj" class="reloj">10:00</div>
+    <div id="reloj" class="reloj">10' 00"</div>
     <div id="ronda" class="ronda">Ronda 0 / 4</div>
 
     <div class="presets">
-      <button onclick="setPreset(600,120,4)">🪢 Cuerda 10m / 2m</button>
-      <button onclick="setPreset(45,15,8)">🔥 HIIT 45s / 15s</button>
-      <button onclick="setPreset(20,10,8)">⚡ Tabata 20s / 10s</button>
+      <button onclick="setPreset(10,0, 2,0, 4)">🪢 Cuerda 10' / 2'</button>
+      <button onclick="setPreset(0,45, 0,15, 8)">🔥 HIIT 45" / 15"</button>
+      <button onclick="setPreset(0,20, 0,10, 8)">⚡ Tabata 20" / 10"</button>
     </div>
 
-    <div class="grid">
-      <div class="campo"><label>Ejercicio (seg)</label><input id="inWork" type="number" value="600" min="5"></div>
-      <div class="campo"><label>Descanso (seg)</label><input id="inRest" type="number" value="120" min="0"></div>
-      <div class="campo"><label>Rondas</label><input id="inRounds" type="number" value="4" min="1" max="50"></div>
+    <div class="filas">
+      <div class="fila">
+        <span class="titulo">🔥 Ejercicio</span>
+        <div class="tiempo-par">
+          <input id="wMin" type="number" value="10" min="0" max="99" onchange="syncPreview()"><b>'</b>
+          <input id="wSec" type="number" value="0" min="0" max="59" onchange="syncPreview()"><b>"</b>
+        </div>
+      </div>
+      <div class="fila">
+        <span class="titulo">😮‍💨 Descanso</span>
+        <div class="tiempo-par">
+          <input id="rMin" type="number" value="2" min="0" max="99"><b>'</b>
+          <input id="rSec" type="number" value="0" min="0" max="59"><b>"</b>
+        </div>
+      </div>
+      <div class="fila">
+        <span class="titulo">🔄 Rondas</span>
+        <div class="tiempo-par">
+          <input id="inRounds" type="number" value="4" min="1" max="50" onchange="syncPreview()">
+        </div>
+      </div>
     </div>
 
     <div class="controles">
@@ -55,6 +76,13 @@
 <script>
 let timer = null, phase = 'idle', rem = 600, round = 0, wakeLock = null;
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+function getWorkSec() {
+  return (parseInt(document.getElementById('wMin').value) || 0) * 60 + (parseInt(document.getElementById('wSec').value) || 0);
+}
+function getRestSec() {
+  return (parseInt(document.getElementById('rMin').value) || 0) * 60 + (parseInt(document.getElementById('rSec').value) || 0);
+}
 
 function tone(freqs, dur=0.18) {
   if (ctx.state === 'suspended') ctx.resume();
@@ -87,7 +115,7 @@ async function keepAwake(on) {
 function fmt(s) {
   const m = String(Math.floor(s / 60)).padStart(2, '0');
   const sec = String(s % 60).padStart(2, '0');
-  return `${m}:${sec}`;
+  return `${m}' ${sec}"`;
 }
 
 function updateUI() {
@@ -99,12 +127,22 @@ function updateUI() {
   est.style.color = phase === 'work' ? 'var(--work)' : phase === 'rest' ? 'var(--rest)' : 'var(--prep)';
 }
 
-function setPreset(w, r, rnd) {
+function syncPreview() {
+  if (phase === 'idle') {
+    rem = Math.max(1, getWorkSec());
+    updateUI();
+  }
+}
+
+function setPreset(wm, ws, rm, rs, rnd) {
   resetTimer();
-  document.getElementById('inWork').value = w;
-  document.getElementById('inRest').value = r;
+  document.getElementById('wMin').value = wm;
+  document.getElementById('wSec').value = ws;
+  document.getElementById('rMin').value = rm;
+  document.getElementById('rSec').value = rs;
   document.getElementById('inRounds').value = rnd;
-  rem = w; updateUI();
+  rem = Math.max(1, getWorkSec());
+  updateUI();
 }
 
 function toggleTimer() {
@@ -125,22 +163,22 @@ function toggleTimer() {
     rem--;
     if (rem <= 3 && rem >= 1) speak(String(rem));
     if (rem <= 0) {
-      const workS = parseInt(document.getElementById('inWork').value) || 60;
-      const restS = parseInt(document.getElementById('inRest').value) || 0;
+      const workS = Math.max(1, getWorkSec());
+      const restS = Math.max(0, getRestSec());
       const totR = parseInt(document.getElementById('inRounds').value) || 1;
 
       if (phase === 'prep' || phase === 'rest') {
         phase = 'work'; rem = workS;
-        tone([880, 1320], 0.2); speak(`Empieza ronda ${round}`);
+        tone(new Array(880, 1320), 0.2); speak(`Empieza ronda ${round}`);
       } else if (phase === 'work') {
         if (round < totR && restS > 0) {
           phase = 'rest'; rem = restS;
-          tone([660, 440], 0.22); speak('Tiempo terminado. Descanso');
+          tone(new Array(660, 440), 0.22); speak('Tiempo terminado. Descanso');
         } else if (round < totR) {
           round++; rem = workS;
-          tone([880, 1320], 0.2); speak(`Ronda ${round}`);
+          tone(new Array(880, 1320), 0.2); speak(`Ronda ${round}`);
         } else {
-          tone([880, 1108, 1320], 0.2); speak('Entrenamiento terminado. Excelente trabajo');
+          tone(new Array(880, 1108, 1320), 0.2); speak('Entrenamiento terminado. Excelente trabajo');
           resetTimer(); return;
         }
       }
@@ -152,7 +190,7 @@ function toggleTimer() {
 
 function resetTimer() {
   clearInterval(timer); timer = null; phase = 'idle'; round = 0;
-  rem = parseInt(document.getElementById('inWork').value) || 600;
+  rem = Math.max(1, getWorkSec());
   const btn = document.getElementById('btnMain');
   btn.textContent = '▶ Iniciar'; btn.className = 'btn btn-start';
   keepAwake(false); updateUI();

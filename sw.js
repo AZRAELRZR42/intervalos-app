@@ -1,2 +1,6 @@
-self.addEventListener('install', e => e.waitUntil(caches.open('hiit-v1').then(c => c.addAll(['./', './index.html', './manifest.json']))));
+self.addEventListener('install', e => {
+  self.skipWaiting();
+  e.waitUntil(caches.open('hiit-v2').then(c => c.addAll(['./', './index.html', './manifest.json', './icon-512.png'])));
+});
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));
 self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
