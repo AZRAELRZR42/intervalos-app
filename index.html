@@ -5,198 +5,206 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-512.png">
-<title>Cronómetro HIIT & Cuerda</title>
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Cronómetro de Intervalos</title>
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --work:#10b981; --rest:#f59e0b; --prep:#3b82f6; --text:#f8fafc; }
+  :root { --bg:#0f172a; --bg2:#1e1b4b; --card:rgba(30,41,59,0.84); --work:#10b981; --rest:#f59e0b; --prep:#38bdf8; --text:#f8fafc; --muted:#94a3b8; --border:rgba(148,163,184,0.24); --bg-img:none; }
   * { box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:18px; }
-  h1 { font-size:1.3rem; margin-bottom:14px; letter-spacing:0.5px; }
-  .panel { background:var(--card); width:100%; max-width:420px; border-radius:20px; padding:22px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,.4); }
-  .estado { font-size:1.2rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; color:var(--prep); }
-  .reloj { font-size:4.2rem; font-weight:800; font-variant-numeric:tabular-nums; margin:8px 0; }
-  .ronda { font-size:1rem; color:#94a3b8; margin-bottom:16px; }
-  .presets { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
-  .presets button { background:#334155; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-size:0.85rem; cursor:pointer; }
-  .filas { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
-  .fila { display:flex; align-items:center; justify-content:space-between; background:#0f172a; padding:10px 14px; border-radius:12px; border:1px solid #334155; }
-  .fila span.titulo { font-size:0.9rem; color:#cbd5e1; font-weight:600; }
-  .tiempo-par { display:flex; align-items:center; gap:6px; }
-  .tiempo-par input { width:56px; background:#1e293b; border:1px solid #475569; color:#fff; padding:6px; border-radius:8px; text-align:center; font-size:1.05rem; font-weight:700; }
-  .tiempo-par b { color:#94a3b8; font-size:1.1rem; }
+  body { background:var(--bg-img), radial-gradient(circle at top, var(--bg2), var(--bg) 75%); background-size:cover; background-position:center; background-attachment:fixed; color:var(--text); display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:14px; transition:background 0.4s; }
+  .barra-temas { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom:12px; background:var(--card); backdrop-filter:blur(10px); padding:8px 14px; border-radius:999px; border:1px solid var(--border); }
+  .tema-btn { width:24px; height:24px; border-radius:50%; border:2px solid #fff; cursor:pointer; }
+  .foto-btn { background:rgba(255,255,255,0.12); color:var(--text); border:1px solid var(--border); padding:4px 10px; border-radius:999px; font-size:0.78rem; cursor:pointer; }
+  .panel { background:var(--card); backdrop-filter:blur(14px); width:100%; max-width:420px; border-radius:26px; padding:20px; text-align:center; border:1px solid var(--border); box-shadow:0 18px 40px rgba(0,0,0,0.45); }
+  .anillo-wrap { position:relative; width:220px; height:220px; margin:4px auto 14px; display:flex; align-items:center; justify-content:center; }
+  svg.anillo { position:absolute; top:0; left:0; width:100%; height:100%; transform:rotate(-90deg); }
+  circle.fondo { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:10; }
+  circle.progreso { fill:none; stroke:var(--prep); stroke-width:10; stroke-linecap:round; stroke-dasharray:603; stroke-dashoffset:0; transition:stroke-dashoffset 0.35s linear, stroke 0.3s; }
+  .centro-reloj { z-index:2; display:flex; flex-direction:column; align-items:center; }
+  .estado { font-size:0.92rem; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; color:var(--prep); }
+  .reloj { font-size:2.9rem; font-weight:800; font-variant-numeric:tabular-nums; margin:2px 0; transition:transform 0.15s; }
+  .latido { transform:scale(1.09); }
+  .ronda { font-size:0.88rem; color:var(--muted); font-weight:600; }
+  .presets { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+  .presets button { background:rgba(255,255,255,0.09); color:var(--text); border:1px solid var(--border); padding:7px 11px; border-radius:12px; font-size:0.82rem; font-weight:600; cursor:pointer; }
+  .filas { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .fila { display:flex; align-items:center; justify-content:space-between; background:rgba(15,23,42,0.55); padding:9px 14px; border-radius:14px; border:1px solid var(--border); }
+  .fila span.titulo { font-size:0.9rem; font-weight:600; }
+  .tiempo-par { display:flex; align-items:center; gap:5px; }
+  .tiempo-par input { width:54px; background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:9px; text-align:center; font-size:1.05rem; font-weight:700; }
+  .tiempo-par b { color:var(--muted); font-size:1.1rem; }
   .controles { display:flex; gap:10px; }
-  .btn { flex:1; border:none; padding:14px; border-radius:14px; font-size:1rem; font-weight:700; cursor:pointer; color:#0f172a; }
+  .btn { flex:1; border:none; padding:14px; border-radius:15px; font-size:1rem; font-weight:800; cursor:pointer; color:#0f172a; }
   .btn-start { background:var(--work); }
   .btn-pause { background:var(--rest); }
   .btn-stop { background:#ef4444; color:#fff; }
+  .resumen-hoy { margin-top:12px; font-size:0.8rem; color:var(--muted); }
 </style>
 </head>
 <body>
-  <h1>⏱️ Cronómetro de Intervalos</h1>
+  <div class="barra-temas">
+    <button class="tema-btn" style="background:#10b981" onclick="aplicarTema('neon')"></button>
+    <button class="tema-btn" style="background:#f97316" onclick="aplicarTema('lava')"></button>
+    <button class="tema-btn" style="background:#06b6d4" onclick="aplicarTema('oceano')"></button>
+    <button class="tema-btn" style="background:#e2e8f0" onclick="aplicarTema('claro')"></button>
+    <label class="foto-btn">🖼️ Fondo <input type="file" accept="image/*" hidden onchange="cargarFondo(event)"></label>
+    <button class="foto-btn" onclick="quitarFondo()">✕</button>
+  </div>
   <div class="panel">
-    <div id="estado" class="estado">Listo</div>
-    <div id="reloj" class="reloj">10' 00"</div>
-    <div id="ronda" class="ronda">Ronda 0 / 4</div>
-
+    <div class="anillo-wrap">
+      <svg class="anillo" viewBox="0 0 220 220">
+        <circle class="fondo" cx="110" cy="110" r="96"></circle>
+        <circle id="arco" class="progreso" cx="110" cy="110" r="96"></circle>
+      </svg>
+      <div class="centro-reloj">
+        <div id="estado" class="estado">Listo</div>
+        <div id="reloj" class="reloj">10' 00"</div>
+        <div id="ronda" class="ronda">Ronda 0 / 4</div>
+      </div>
+    </div>
     <div class="presets">
-      <button onclick="setPreset(10,0, 2,0, 4)">🪢 Cuerda 10' / 2'</button>
-      <button onclick="setPreset(0,45, 0,15, 8)">🔥 HIIT 45" / 15"</button>
-      <button onclick="setPreset(0,20, 0,10, 8)">⚡ Tabata 20" / 10"</button>
+      <button onclick="setPreset(10,0,2,0,4)">🪢 Cuerda 10' / 2'</button>
+      <button onclick="setPreset(0,45,0,15,8)">🔥 HIIT 45" / 15"</button>
+      <button onclick="setPreset(0,20,0,10,8)">⚡ Tabata 20" / 10"</button>
     </div>
-
     <div class="filas">
-      <div class="fila">
-        <span class="titulo">🔥 Ejercicio</span>
-        <div class="tiempo-par">
-          <input id="wMin" type="number" value="10" min="0" max="99" onchange="syncPreview()"><b>'</b>
-          <input id="wSec" type="number" value="0" min="0" max="59" onchange="syncPreview()"><b>"</b>
-        </div>
-      </div>
-      <div class="fila">
-        <span class="titulo">😮‍💨 Descanso</span>
-        <div class="tiempo-par">
-          <input id="rMin" type="number" value="2" min="0" max="99"><b>'</b>
-          <input id="rSec" type="number" value="0" min="0" max="59"><b>"</b>
-        </div>
-      </div>
-      <div class="fila">
-        <span class="titulo">🔄 Rondas</span>
-        <div class="tiempo-par">
-          <input id="inRounds" type="number" value="4" min="1" max="50" onchange="syncPreview()">
-        </div>
-      </div>
+      <div class="fila"><span class="titulo">🔥 Ejercicio</span><div class="tiempo-par"><input id="wMin" type="number" value="10" min="0" max="99" onchange="syncPreview()"><b>'</b><input id="wSec" type="number" value="0" min="0" max="59" onchange="syncPreview()"><b>"</b></div></div>
+      <div class="fila"><span class="titulo">😮‍💨 Descanso</span><div class="tiempo-par"><input id="rMin" type="number" value="2" min="0" max="99"><b>'</b><input id="rSec" type="number" value="0" min="0" max="59"><b>"</b></div></div>
+      <div class="fila"><span class="titulo">🔄 Rondas</span><div class="tiempo-par"><input id="inRounds" type="number" value="4" min="1" max="50" onchange="syncPreview()"></div></div>
     </div>
-
     <div class="controles">
       <button id="btnMain" class="btn btn-start" onclick="toggleTimer()">▶ Iniciar</button>
       <button class="btn btn-stop" onclick="resetTimer()">⏹ Reiniciar</button>
     </div>
+    <div id="resumenHoy" class="resumen-hoy">Hoy: 0 rondas · 0 min entrenados</div>
   </div>
-
 <script>
-let timer = null, phase = 'idle', rem = 600, round = 0, wakeLock = null;
-const ctx = new (window.AudioContext || window.webkitAudioContext)();
+const TEMAS = {
+  neon:   { bg:'#0f172a', bg2:'#1e1b4b', card:'rgba(30,41,59,0.84)', work:'#10b981', rest:'#f59e0b', prep:'#38bdf8', text:'#f8fafc', muted:'#94a3b8' },
+  lava:   { bg:'#180909', bg2:'#450a0a', card:'rgba(45,15,15,0.84)', work:'#f97316', rest:'#eab308', prep:'#fb7185', text:'#fff7ed', muted:'#fdba74' },
+  oceano: { bg:'#04151f', bg2:'#0c4a6e', card:'rgba(12,50,75,0.84)', work:'#06b6d4', rest:'#a78bfa', prep:'#34d399', text:'#f0f9ff', muted:'#7dd3fc' },
+  claro:  { bg:'#e2e8f0', bg2:'#cbd5e1', card:'rgba(255,255,255,0.88)', work:'#059669', rest:'#d97706', prep:'#0284c7', text:'#0f172a', muted:'#475569' }
+};
+function aplicarTema(n) {
+  const t = TEMAS[n] || TEMAS.neon, r = document.documentElement.style;
+  Object.keys(t).forEach(k => r.setProperty('--' + k, t[k]));
+  localStorage.setItem('hiit_tema', n); updateUI();
+}
+function cargarFondo(ev) {
+  const file = ev.target.files && ev.target.files.item(0);
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const u = 'url("' + reader.result + '")';
+    document.documentElement.style.setProperty('--bg-img', u);
+    try { localStorage.setItem('hiit_fondo', u); } catch (e) {}
+  };
+  reader.readAsDataURL(file);
+}
+function quitarFondo() { document.documentElement.style.setProperty('--bg-img', 'none'); localStorage.removeItem('hiit_fondo'); }
 
-function getWorkSec() {
-  return (parseInt(document.getElementById('wMin').value) || 0) * 60 + (parseInt(document.getElementById('wSec').value) || 0);
-}
-function getRestSec() {
-  return (parseInt(document.getElementById('rMin').value) || 0) * 60 + (parseInt(document.getElementById('rSec').value) || 0);
-}
+let timer = null, phase = 'idle', rem = 600, totalPhase = 600, round = 0, wakeLock = null;
+const PERIMETRO = 603, ctx = new (window.AudioContext || window.webkitAudioContext)();
+const getWorkSec = () => (parseInt(document.getElementById('wMin').value)||0)*60 + (parseInt(document.getElementById('wSec').value)||0);
+const getRestSec = () => (parseInt(document.getElementById('rMin').value)||0)*60 + (parseInt(document.getElementById('rSec').value)||0);
 
 function tone(freqs, dur=0.18) {
   if (ctx.state === 'suspended') ctx.resume();
   freqs.forEach((f, i) => {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = 'sine'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.35, ctx.currentTime + i * (dur + 0.05));
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * (dur + 0.05) + dur);
+    g.gain.setValueAtTime(0.35, ctx.currentTime + i*(dur+0.05));
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*(dur+0.05) + dur);
     o.connect(g); g.connect(ctx.destination);
-    o.start(ctx.currentTime + i * (dur + 0.05));
-    o.stop(ctx.currentTime + i * (dur + 0.05) + dur);
+    o.start(ctx.currentTime + i*(dur+0.05)); o.stop(ctx.currentTime + i*(dur+0.05) + dur);
   });
 }
-
 function speak(txt) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(txt);
-  u.lang = 'es-MX'; u.rate = 1.1;
-  speechSynthesis.speak(u);
+  const u = new SpeechSynthesisUtterance(txt); u.lang = 'es-MX'; u.rate = 1.1; speechSynthesis.speak(u);
 }
-
+const vibrar = p => { if ('vibrate' in navigator) navigator.vibrate(p); };
 async function keepAwake(on) {
   try {
     if (on && 'wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
     else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
   } catch (e) {}
 }
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + "' " + String(s%60).padStart(2,'0') + '"';
 
-function fmt(s) {
-  const m = String(Math.floor(s / 60)).padStart(2, '0');
-  const sec = String(s % 60).padStart(2, '0');
-  return `${m}' ${sec}"`;
+function sumarProgreso(seg) {
+  const hoy = new Date().toISOString().slice(0,10), st = JSON.parse(localStorage.getItem('hiit_stats')||'{}');
+  if (st.fecha !== hoy) { st.fecha = hoy; st.rondas = 0; st.seg = 0; }
+  st.rondas += 1; st.seg += seg; localStorage.setItem('hiit_stats', JSON.stringify(st)); mostrarProgreso();
 }
-
+function mostrarProgreso() {
+  const hoy = new Date().toISOString().slice(0,10), st = JSON.parse(localStorage.getItem('hiit_stats')||'{}');
+  const r = st.fecha===hoy ? st.rondas : 0, m = st.fecha===hoy ? Math.round(st.seg/60) : 0;
+  document.getElementById('resumenHoy').textContent = 'Hoy: ' + r + ' rondas · ' + m + ' min entrenados';
+}
 function updateUI() {
-  const est = document.getElementById('estado');
+  const est = document.getElementById('estado'), arco = document.getElementById('arco');
   const totR = parseInt(document.getElementById('inRounds').value) || 1;
   document.getElementById('reloj').textContent = fmt(rem);
-  document.getElementById('ronda').textContent = `Ronda ${round} / ${totR}`;
-  est.textContent = phase === 'prep' ? 'Prepárate' : phase === 'work' ? '¡Entrenando!' : phase === 'rest' ? 'Descanso' : 'Listo';
-  est.style.color = phase === 'work' ? 'var(--work)' : phase === 'rest' ? 'var(--rest)' : 'var(--prep)';
+  document.getElementById('ronda').textContent = 'Ronda ' + round + ' / ' + totR;
+  const color = phase==='work' ? 'var(--work)' : phase==='rest' ? 'var(--rest)' : 'var(--prep)';
+  est.textContent = phase==='prep' ? 'Prepárate' : phase==='work' ? '¡Entrenando!' : phase==='rest' ? 'Descanso' : 'Listo';
+  est.style.color = color; arco.style.stroke = color;
+  const frac = totalPhase > 0 ? Math.max(0, Math.min(1, rem / totalPhase)) : 1;
+  arco.style.strokeDashoffset = PERIMETRO * (1 - frac);
 }
-
-function syncPreview() {
-  if (phase === 'idle') {
-    rem = Math.max(1, getWorkSec());
-    updateUI();
-  }
-}
-
+function syncPreview() { if (phase === 'idle') { rem = Math.max(1, getWorkSec()); totalPhase = rem; updateUI(); } }
 function setPreset(wm, ws, rm, rs, rnd) {
   resetTimer();
-  document.getElementById('wMin').value = wm;
-  document.getElementById('wSec').value = ws;
-  document.getElementById('rMin').value = rm;
-  document.getElementById('rSec').value = rs;
+  document.getElementById('wMin').value = wm; document.getElementById('wSec').value = ws;
+  document.getElementById('rMin').value = rm; document.getElementById('rSec').value = rs;
   document.getElementById('inRounds').value = rnd;
-  rem = Math.max(1, getWorkSec());
-  updateUI();
+  rem = Math.max(1, getWorkSec()); totalPhase = rem; updateUI();
 }
-
 function toggleTimer() {
   const btn = document.getElementById('btnMain');
-  if (timer) {
-    clearInterval(timer); timer = null;
-    btn.textContent = '▶ Reanudar'; btn.className = 'btn btn-start';
-    keepAwake(false); return;
-  }
-  if (phase === 'idle') {
-    phase = 'prep'; rem = 5; round = 1;
-    speak('Prepárate');
-  }
-  btn.textContent = '⏸ Pausar'; btn.className = 'btn btn-pause';
-  keepAwake(true); updateUI();
-
+  if (timer) { clearInterval(timer); timer = null; btn.textContent = '▶ Reanudar'; btn.className = 'btn btn-start'; keepAwake(false); return; }
+  if (phase === 'idle') { phase = 'prep'; rem = 5; totalPhase = 5; round = 1; speak('Prepárate'); }
+  btn.textContent = '⏸ Pausar'; btn.className = 'btn btn-pause'; keepAwake(true); updateUI();
   timer = setInterval(() => {
     rem--;
-    if (rem <= 3 && rem >= 1) speak(String(rem));
+    const relojEl = document.getElementById('reloj');
+    if (rem <= 3 && rem >= 1) { speak(String(rem)); relojEl.classList.add('latido'); setTimeout(() => relojEl.classList.remove('latido'), 200); }
     if (rem <= 0) {
-      const workS = Math.max(1, getWorkSec());
-      const restS = Math.max(0, getRestSec());
-      const totR = parseInt(document.getElementById('inRounds').value) || 1;
-
+      const workS = Math.max(1, getWorkSec()), restS = Math.max(0, getRestSec()), totR = parseInt(document.getElementById('inRounds').value) || 1;
       if (phase === 'prep' || phase === 'rest') {
-        phase = 'work'; rem = workS;
-        tone(new Array(880, 1320), 0.2); speak(`Empieza ronda ${round}`);
+        phase = 'work'; rem = workS; totalPhase = workS;
+        tone(new Array(880, 1320), 0.2); speak('Empieza ronda ' + round); vibrar(200);
       } else if (phase === 'work') {
+        sumarProgreso(workS);
         if (round < totR && restS > 0) {
-          phase = 'rest'; rem = restS;
-          tone(new Array(660, 440), 0.22); speak('Tiempo terminado. Descanso');
+          round++; phase = 'rest'; rem = restS; totalPhase = restS;
+          tone(new Array(660, 440), 0.22); speak('Tiempo terminado. Descanso'); vibrar(new Array(150, 80, 150));
         } else if (round < totR) {
-          round++; rem = workS;
-          tone(new Array(880, 1320), 0.2); speak(`Ronda ${round}`);
+          round++; phase = 'work'; rem = workS; totalPhase = workS;
+          tone(new Array(880, 1320), 0.2); speak('Ronda ' + round); vibrar(200);
         } else {
-          tone(new Array(880, 1108, 1320), 0.2); speak('Entrenamiento terminado. Excelente trabajo');
+          tone(new Array(880, 1108, 1320), 0.2); speak('Entrenamiento terminado. Excelente trabajo'); vibrar(new Array(200, 100, 200, 100, 300));
           resetTimer(); return;
         }
       }
-      if (phase === 'rest') round++;
     }
     updateUI();
   }, 1000);
 }
-
 function resetTimer() {
   clearInterval(timer); timer = null; phase = 'idle'; round = 0;
-  rem = Math.max(1, getWorkSec());
-  const btn = document.getElementById('btnMain');
-  btn.textContent = '▶ Iniciar'; btn.className = 'btn btn-start';
+  rem = Math.max(1, getWorkSec()); totalPhase = rem;
+  const btn = document.getElementById('btnMain'); btn.textContent = '▶ Iniciar'; btn.className = 'btn btn-start';
   keepAwake(false); updateUI();
 }
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+(function init() {
+  aplicarTema(localStorage.getItem('hiit_tema') || 'neon');
+  const f = localStorage.getItem('hiit_fondo'); if (f) document.documentElement.style.setProperty('--bg-img', f);
+  mostrarProgreso();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+})();
 </script>
 </body>
 </html>
